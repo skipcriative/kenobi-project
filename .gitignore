@@ -1,0 +1,50 @@
+# ─── Python ─────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ─── Virtual Environment ────────────────────────────────
+env/
+venv/
+ENV/
+.venv/
+
+# ─── IDEs / Editors ─────────────────────────────────────
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ─── Logs / Output ──────────────────────────────────────
+*.log
+*.sqlite3
+*.db
+*.tmp
+
+# ─── Environment Variables ──────────────────────────────
+.env
+.env.*
+
+# ─── Jupyter / Notebooks (optional) ─────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ─── Docker (optional) ──────────────────────────────────
+*.pid
+*.pid.lock
+*.tar
+*.bak
+
+# ─── Mac / Windows system files ─────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── HTML preview outputs (optional) ────────────────────
+kenobi/tests/email_preview.html

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ subject }}</title>
+  <style>
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: white;
+      color: #1A1A1A;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 748px;
+      height: 90%;
+      margin: 0 auto;
+      padding-bottom: 5px;
+      background-color: #fcfcfc;
+    }
+
+    .header {
+      text-align: center;
+      padding: 24px 20px 0;
+    }
+
+    .header img {
+      width: 258px;
+    }
+
+    .container-card h1 {
+      font-size: 24px;
+      font-weight: bold;
+      font-family: Arial, sans-serif;
+      padding: 40px 20px 30px;
+      margin: 0;
+      text-align: justify;
+    }
+
+    .card-title {
+      font-size: 24px;
+      margin-top: 0;
+      margin-bottom: 20px;
+      font-weight: bold;
+      width: 500px;
+      word-break: break-word;
+    }
+
+    .card-table {
+      width: 100%;
+      border-spacing: 0;
+      border-collapse: collapse;
+    }
+
+    .card-cell {
+      width: 100%;
+      padding: 10px 20px;
+    }
+
+    .card {
+      border: 1px solid #CDCCCC;
+      border-radius: 6px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+      width: 100%;
+      max-width: 700px;
+      height: 310px;
+      background-color: white;
+    }
+
+    .card-top-border {
+      height: 24px;
+      background-color: #221F77;
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
+      padding: 0;
+    }
+
+    .card-content {
+      padding: 0px 16px 0px;
+      position: relative;
+    }
+
+    .card-header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .btn-edit {
+      text-align: center;
+      background-color: #204C8E;
+      color: white !important;
+      text-decoration: none !important;
+      padding: 10px 22px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 14px;
+      min-width: 100px;
+      margin-top: 5px;
+      margin-right: 5px;
+      display: inline-block;
+      white-space: nowrap;
+    }
+
+    .info-list {
+      width: 100%;
+      font-size: 18px;
+      line-height: 1.6;
+      margin-top: 12px;
+    }
+
+    .info-list tr td {
+      padding: 6px 0;
+    }
+
+    .info-label {
+      color: #5c5c5c;
+      font-weight: 600;
+      min-width: 200px;
+    }
+
+    .info-value {
+      font-weight: bold;
+      color: #1A1A1A;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 14px;
+      color: #5c5c5c;
+      margin: 30px 0;
+    }
+
+    .footer a {
+      color: #5c5c5c;
+      text-decoration: underline;
+      margin: 0 5px;
+    }
+
+    .footer address {
+      margin-top: 10px;
+      /* margin-bottom: 30px; */
+      font-style: normal;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="https://imgur.com/Nkhq2wE.png" alt="Kenobi Logo">
+    </div>
+
+    <div class="container-card">
+      <h1>Encontre a oportunidade ideal para financiar e acelerar o seu projeto/empresa</h1>
+
+      <table class="card-table">
+        {% for i in range(opportunities|length) %}
+        <tr>
+          <td class="card-cell">
+            <table class="card">
+              <tr><td class="card-top-border"></td></tr>
+              <tr><td class="card-content">
+                <table class="card-header" width="100%">
+                  <tr>
+                    <td><p class="card-title">{{ opportunities[i].title }}</p></td>
+                    <td valign="top" align="right">
+                      <a href="{{ opportunities[i].link }}" class="btn-edit">Acessar edital</a>
+                    </td>
+                  </tr>
+                </table>
+                <table class="info-list">
+                  <tr><td class="info-label">👥 Público-alvo:</td><td class="info-value">{{ opportunities[i].target_audience }}</td></tr>
+                  <tr><td class="info-label">🎯 Objetivo:</td><td class="info-value">{{ opportunities[i].resume }}</td></tr>
+                  <tr><td class="info-label">💰 Recursos:</td><td class="info-value">{{ opportunities[i].funding_source }}</td></tr>
+                  <tr><td class="info-label">📅 Prazo:</td><td class="info-value">{{ opportunities[i].deadline }}</td></tr>
+                  <tr><td class="info-label">🏛️ Fonte de recurso:</td><td class="info-value">{{ opportunities[i].funding_source }}</td></tr>
+                </table>
+              </td></tr>
+            </table>
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+
+    <div class="footer">
+      <div><a href="https://kenobi.gruposkip.com">kenobi.gruposkip.com</a> | <a href="{{ unsubscribe_url }}">Cancelar inscrição</a></div>
+      <address>R. Riachuelo, 1200 - São José, Aracaju - SE, 49015-160</address>
+    </div>
+  </div>
+</body>
+</html>
