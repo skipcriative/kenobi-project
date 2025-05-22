@@ -14,8 +14,9 @@ def run_kenobi():
 #Schedule to run once every day at 9am
 schedule.every().day.at("09:00").do(run_kenobi)
 
-if __name__=="__main__":
+if __name__ == "__main__":
     print("📅 Scheduler started. Waiting for scheduled time...")
     while True:
         schedule.run_pending()
+        print("⏱️ Waiting for the time to run:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
         time.sleep(60)

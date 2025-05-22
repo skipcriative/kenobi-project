@@ -98,7 +98,7 @@ if __name__ == "__main__":
     response = send_email(
     from_addr="naoresponder@gruposkip.com",
     to_addr="eduardo.lemos16@gmail.com,eduardo.lemos@gruposkip.com,lizmatiaslisboa@gmail.com,thallescarvalhocm@gmail.com",
-    subject="Testing Scheduled sending",
+    subject="Testing Scheduled sending - on HT",
     html_body=html,
     api_url="http://18.222.179.149:8080//api/email")
 
