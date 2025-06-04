@@ -3,6 +3,7 @@
 import requests
 import os
 import json
+from datetime import datetime, date
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from kenobi.dtos.response_dto import ResponseDTO
@@ -13,7 +14,7 @@ from kenobi.services.email_service import build_email_html, send_email
 load_dotenv()
 API_KEY = os.getenv("OPENAI_API_KEY")
 
-FINEP_URL = "http://www.finep.gov.br/chamadas-publicas/chamadaspublicas"
+FINEP_URL = "http://www.finep.gov.br/chamadas-publicas?situacao=aberta" #"http://www.finep.gov.br/chamadas-publicas/chamadaspublicas"
 OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
 
 def fetch_finep_calls():
@@ -43,6 +44,18 @@ def parseToResponseDTO(responseText):
     except json.JSONDecodeError as e:
         print(f"❌ Error parsing JSON: {e}")
         return []
+    
+    # Validate if the edital is still open
+    open_calls = []
+    for call in calls:
+        deadline_str = call.get("prazo_envio", None)
+        if deadline_str:
+            try:
+                deadline_date = datetime.strptime(deadline_str, "%d/%m/%Y").date()
+                if date.today() <= deadline_date:
+                    open_calls.append(call)
+            except ValueError:
+                print(f"⚠️ Invalid date format: {deadline_str}")
 
     # Convert JSON into DTOs
     opportunities = [
@@ -57,7 +70,7 @@ def parseToResponseDTO(responseText):
             link=call.get("link", "N/A"),
             status=call.get("status","N/A")
         )
-        for call in calls
+        for call in open_calls
     ]
 
     return opportunities
