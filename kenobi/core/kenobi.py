@@ -6,8 +6,8 @@ import json
 from datetime import datetime, date
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-from kenobi.dtos.response_dto import ResponseDTO
-from kenobi.services.email_service import build_email_html, send_email
+from kenobi.dtos import ResponseDTO, EmailLogDTO, AuditEventDTO
+from kenobi.services import build_email_html, send_email, create_email_log, create_audit_event
 
 
 # Load OpenAI API Key
@@ -102,20 +102,64 @@ def ask_chatgpt():
 
 
 if __name__ == "__main__":
-    response = ask_chatgpt()
-
-    responseDTO = parseToResponseDTO(response)
-
+    # response_gpt = ask_chatgpt()
+    # responseDTO = parseToResponseDTO(response_gpt)
+    responseDTO =  [ResponseDTO(
+            title="Programa de Inovação Tecnológica",
+            resume="Apoio a projetos de inovação no setor industrial.",
+            publication_date="10/03/2025",
+            deadline="30/06/2025",
+            funding_source="Finep, BNDES",
+            target_audience="Empresas",
+            theme="Indústria 4.0",
+            link="http://finep.gov.br/edital-001",
+            status="Active"
+        )]
+    
     html = build_email_html(responseDTO,"")
+
+    subject = "Testing Persistence - on HT"
+    recipients = "eduardo.lemos16@gmail.com,eduardo.lemos@gruposkip.com,lizmatiaslisboa@gmail.com,thallescarvalhocm@gmail.com"
     
     response = send_email(
     from_addr="naoresponder@gruposkip.com",
-    to_addr="eduardo.lemos16@gmail.com,eduardo.lemos@gruposkip.com,lizmatiaslisboa@gmail.com,thallescarvalhocm@gmail.com",
-    subject="Testing Scheduled sending - on HT",
+    to_addr= recipients,
+    subject= subject,
     html_body=html,
     api_url="http://18.222.179.149:8080//api/email")
 
-    print("✅ Email sent!" if response.ok else f"❌ {response.status_code}: {response.text}")
+    if(response.ok):
+        print("✅ Email sent!")
+        create_email_log(
+            EmailLogDTO(
+                subject= subject,
+                recipients=recipients,
+                raw_payload="mockRaw", #response_gpt,
+                opportunities=str(responseDTO),
+                html_content=html,
+                status="sent",
+                api_response_code=response.status_code,
+            )
+        )
+        create_audit_event(
+            AuditEventDTO(
+                event_type="success",
+                message=response.text,
+                status_code=response.status_code,
+                data=str(responseDTO)
+            )
+        )
+    else:
+        print("Fail to send email!")
+        create_audit_event(
+            AuditEventDTO(
+                event_type="error",
+                resume="Fail to send email",
+                message=response.text,
+                status_code=response.status_code,
+                metadados=str(responseDTO)
+            )
+        )
     
 
 
