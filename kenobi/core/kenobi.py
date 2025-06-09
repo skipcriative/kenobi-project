@@ -6,8 +6,8 @@ import json
 from datetime import datetime, date
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-from kenobi.dtos.response_dto import ResponseDTO
-from kenobi.services.email_service import build_email_html, send_email
+from kenobi.dtos import ResponseDTO, EmailLogDTO, AuditEventDTO
+from kenobi.services import build_email_html, send_email, create_email_log, create_audit_event, get_email_log_by_id
 
 
 # Load OpenAI API Key
@@ -101,26 +101,64 @@ def ask_chatgpt():
         return f"Erro na API: {response.status_code}, {response.text}"
 
 
+def handle_success(response_dto, subject, recipients, html, response_gpt, response):
+        email_log = create_email_log(
+            EmailLogDTO(
+                subject= subject,
+                recipients=recipients,
+                raw_payload=response_gpt,
+                opportunities=str(response_dto),
+                html_content=html,
+                status="sent",
+                api_response_code=response.status_code,
+            )
+        )
+        create_audit_event(
+            AuditEventDTO(
+                event_type="success",
+                message=response.text,
+                status_code=response.status_code,
+                data=str(response_dto), 
+                email_log_id= email_log.id
+            )
+        )
+
+def handle_failure(response_dto, response):
+    create_audit_event(
+        AuditEventDTO(
+            event_type="error",
+            resume="Fail to send email",
+            message=response.text,
+            status_code=response.status_code,
+            data=str(response_dto)
+        )
+    )
+
+def main():
+    subject = "Testing Persistence - on HT"
+    recipients = "eduardo.lemos16@gmail.com,eduardo.lemos@gruposkip.com,lizmatiaslisboa@gmail.com,thallescarvalhocm@gmail.com"
+
+    # Step 1: Ask ChatGPT and build email content
+    response_gpt = ask_chatgpt()
+    response_dto = parseToResponseDTO(response_gpt)
+    html = build_email_html(response_dto, "")
+
+    # Step 2: Send email
+    response_email = send_email(
+        from_addr="naoresponder@gruposkip.com",
+        to_addr=recipients,
+        subject=subject,
+        html_body=html,
+        api_url="http://18.222.179.149:8080//api/email"
+    )
+
+    # Step 3: Handle email success or failure
+    if response_email.ok:
+        print(f"✅ Email sent! Status code: {response_email.status_code}; and the response text: {response_email.text}")
+        handle_success(response_dto, subject, recipients, html, response_gpt, response_email)
+    else:
+        print("❌ Failed to send email.")
+        handle_failure(response_dto, response_email)
+
 if __name__ == "__main__":
-    response = ask_chatgpt()
-
-    responseDTO = parseToResponseDTO(response)
-
-    html = build_email_html(responseDTO,"")
-    
-    response = send_email(
-    from_addr="naoresponder@gruposkip.com",
-    to_addr="eduardo.lemos16@gmail.com,eduardo.lemos@gruposkip.com,lizmatiaslisboa@gmail.com,thallescarvalhocm@gmail.com",
-    subject="Testing Scheduled sending - on HT",
-    html_body=html,
-    api_url="http://18.222.179.149:8080//api/email")
-
-    print("✅ Email sent!" if response.ok else f"❌ {response.status_code}: {response.text}")
-    
-
-
-
-
-    
-        
-
+    main()
