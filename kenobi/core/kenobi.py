@@ -100,59 +100,65 @@ def ask_chatgpt():
     else:
         return f"Erro na API: {response.status_code}, {response.text}"
 
-if __name__ == "__main__":
-    response_gpt = ask_chatgpt()
-    responseDTO = parseToResponseDTO(response_gpt)   
-    html = build_email_html(responseDTO,"")
 
-    subject = "Testing Persistence - on HT"
-    recipients = "eduardo.lemos16@gmail.com,eduardo.lemos@gruposkip.com,lizmatiaslisboa@gmail.com,thallescarvalhocm@gmail.com"
-    
-    response = send_email(
-    from_addr="naoresponder@gruposkip.com",
-    to_addr= recipients,
-    subject= subject,
-    html_body=html,
-    api_url="http://18.222.179.149:8080//api/email")
-
-    if(response.ok):
-        print("✅ Email sent!")
+def handle_success(response_dto, subject, recipients, html, response_gpt, response):
         email_log = create_email_log(
             EmailLogDTO(
                 subject= subject,
                 recipients=recipients,
-                raw_payload="mockRaw-timestampTest3", #response_gpt,
-                opportunities=str(responseDTO),
+                raw_payload=response_gpt,
+                opportunities=str(response_dto),
                 html_content=html,
                 status="sent",
-                api_response_code="mockValue", #response.status_code,
+                api_response_code=response.status_code,
             )
         )
         create_audit_event(
             AuditEventDTO(
                 event_type="success",
-                message="mockValue", #response.text,
-                status_code="mockValue", #response.status_code,
-                data=str(responseDTO), 
+                message=response.text,
+                status_code=response.status_code,
+                data=str(response_dto), 
                 email_log_id= email_log.id
             )
         )
-    else:
-        print("Fail to send email!")
-        create_audit_event(
-            AuditEventDTO(
-                event_type="Mock error",
-                resume="Fail to send email",
-                message="mockValue", #response.text,
-                status_code="mockValue", #response.status_code,
-                metadados=str(responseDTO)
-            )
+
+def handle_failure(response_dto, response):
+    create_audit_event(
+        AuditEventDTO(
+            event_type="error",
+            resume="Fail to send email",
+            message=response.text,
+            status_code=response.status_code,
+            data=str(response_dto)
         )
-    
+    )
 
+def main():
+    subject = "Testing Persistence - on HT"
+    recipients = "eduardo.lemos16@gmail.com,eduardo.lemos@gruposkip.com,lizmatiaslisboa@gmail.com,thallescarvalhocm@gmail.com"
 
+    # Step 1: Ask ChatGPT and build email content
+    response_gpt = ask_chatgpt()
+    response_dto = parseToResponseDTO(response_gpt)
+    html = build_email_html(response_dto, "")
 
+    # Step 2: Send email
+    response_email = send_email(
+        from_addr="naoresponder@gruposkip.com",
+        to_addr=recipients,
+        subject=subject,
+        html_body=html,
+        api_url="http://18.222.179.149:8080//api/email"
+    )
 
-    
-        
+    # Step 3: Handle email success or failure
+    if response_email.ok:
+        print(f"✅ Email sent! Status code: {response_email.status_code}; and the response text: {response_email.text}")
+        handle_success(response_dto, subject, recipients, html, response_gpt, response_email)
+    else:
+        print("❌ Failed to send email.")
+        handle_failure(response_dto, response_email)
 
+if __name__ == "__main__":
+    main()

@@ -13,7 +13,8 @@ def create_email_log(dto: EmailLogDTO):
         "html_content": dto.html_content,
         "status": dto.status,
         "error_message": dto.error_message,
-        "sent_at": dto.sent_at
+        "sent_at": dto.sent_at,
+        "api_response_code" : dto.api_response_code
     }
     saved = email_log_repository.save_email_log(data)
     return EmailLogDTO.from_entity(saved)

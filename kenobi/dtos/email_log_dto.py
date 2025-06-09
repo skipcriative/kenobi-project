@@ -14,7 +14,7 @@ class EmailLogDTO:
     html_content: str = ""
     status: str = ""
     error_message: Optional[str] = None
-    api_response_code: str = ""
+    api_response_code: int = ""
     sent_at: datetime = None
 
     @staticmethod
