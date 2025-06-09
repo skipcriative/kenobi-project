@@ -100,7 +100,6 @@ def ask_chatgpt():
     else:
         return f"Erro na API: {response.status_code}, {response.text}"
 
-
 if __name__ == "__main__":
     response_gpt = ask_chatgpt()
     responseDTO = parseToResponseDTO(response_gpt)   
