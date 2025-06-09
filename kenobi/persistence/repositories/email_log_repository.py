@@ -3,16 +3,16 @@ from kenobi.persistence import SessionLocal
 from kenobi.persistence.entities.email_log_entity import EmailLog
 from kenobi.dtos.email_log_dto import EmailLogDTO
 
-def save_email_log(data: dict) -> EmailLogDTO:
+def save_email_log(data: dict) -> EmailLog:
     session = SessionLocal()
     try:
         log = EmailLog(**data)
         session.add(log)
         session.flush()  # Garante que o ID é atribuído
 
-        dto = EmailLog(log)  # Ainda está vinculado à sessão
+        entity = EmailLog.copy(log)  # Ainda está vinculado à sessão
         session.commit()
-        return dto
+        return entity
     except Exception as e:
         session.rollback()
         raise e

@@ -3,16 +3,16 @@ from kenobi.persistence import SessionLocal
 from kenobi.persistence.entities.audit_event_entity import AuditEvent
 from kenobi.dtos.audit_event_dto import AuditEventDTO
 
-def save_audit_event(data: dict):
+def save_audit_event(data: dict) -> AuditEvent:
     session = SessionLocal()
     try:
         event = AuditEvent(**data)
         session.add(event)
         session.flush()
 
-        dto = AuditEventDTO.from_entity(event)
+        entity = AuditEvent.copy(event)
         session.commit()
-        return dto
+        return entity
     except Exception as e:
         session.rollback()
         raise e

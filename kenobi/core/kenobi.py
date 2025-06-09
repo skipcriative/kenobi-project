@@ -7,7 +7,7 @@ from datetime import datetime, date
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from kenobi.dtos import ResponseDTO, EmailLogDTO, AuditEventDTO
-from kenobi.services import build_email_html, send_email, create_email_log, create_audit_event
+from kenobi.services import build_email_html, send_email, create_email_log, create_audit_event, get_email_log_by_id
 
 
 # Load OpenAI API Key
@@ -102,20 +102,8 @@ def ask_chatgpt():
 
 
 if __name__ == "__main__":
-    # response_gpt = ask_chatgpt()
-    # responseDTO = parseToResponseDTO(response_gpt)
-    responseDTO =  [ResponseDTO(
-            title="Programa de Inovação Tecnológica",
-            resume="Apoio a projetos de inovação no setor industrial.",
-            publication_date="10/03/2025",
-            deadline="30/06/2025",
-            funding_source="Finep, BNDES",
-            target_audience="Empresas",
-            theme="Indústria 4.0",
-            link="http://finep.gov.br/edital-001",
-            status="Active"
-        )]
-    
+    response_gpt = ask_chatgpt()
+    responseDTO = parseToResponseDTO(response_gpt)   
     html = build_email_html(responseDTO,"")
 
     subject = "Testing Persistence - on HT"
@@ -130,33 +118,34 @@ if __name__ == "__main__":
 
     if(response.ok):
         print("✅ Email sent!")
-        create_email_log(
+        email_log = create_email_log(
             EmailLogDTO(
                 subject= subject,
                 recipients=recipients,
-                raw_payload="mockRaw", #response_gpt,
+                raw_payload="mockRaw-timestampTest3", #response_gpt,
                 opportunities=str(responseDTO),
                 html_content=html,
                 status="sent",
-                api_response_code=response.status_code,
+                api_response_code="mockValue", #response.status_code,
             )
         )
         create_audit_event(
             AuditEventDTO(
                 event_type="success",
-                message=response.text,
-                status_code=response.status_code,
-                data=str(responseDTO)
+                message="mockValue", #response.text,
+                status_code="mockValue", #response.status_code,
+                data=str(responseDTO), 
+                email_log_id= email_log.id
             )
         )
     else:
         print("Fail to send email!")
         create_audit_event(
             AuditEventDTO(
-                event_type="error",
+                event_type="Mock error",
                 resume="Fail to send email",
-                message=response.text,
-                status_code=response.status_code,
+                message="mockValue", #response.text,
+                status_code="mockValue", #response.status_code,
                 metadados=str(responseDTO)
             )
         )
