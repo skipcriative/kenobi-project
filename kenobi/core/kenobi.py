@@ -135,7 +135,7 @@ def handle_failure(response_dto, response):
     )
 
 def main():
-    subject = "Testing Persistence - on HT"
+    subject = "Testing Name with emoji - on HT"
     recipients = "eduardo.lemos16@gmail.com,eduardo.lemos@gruposkip.com,lizmatiaslisboa@gmail.com,thallescarvalhocm@gmail.com"
 
     # Step 1: Ask ChatGPT and build email content
@@ -145,7 +145,7 @@ def main():
 
     # Step 2: Send email
     response_email = send_email(
-        from_addr="naoresponder@gruposkip.com",
+        from_addr='"Kenobi 🦘" <naoresponder@gruposkip.com>',
         to_addr=recipients,
         subject=subject,
         html_body=html,
@@ -154,7 +154,7 @@ def main():
 
     # Step 3: Handle email success or failure
     if response_email.ok:
-        print(f"✅ Email sent! Status code: {response_email.status_code}; and the response text: {response_email.text}")
+        print(f"✅ Email sent!")
         handle_success(response_dto, subject, recipients, html, response_gpt, response_email)
     else:
         print("❌ Failed to send email.")
