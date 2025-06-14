@@ -4,10 +4,18 @@ import time
 import schedule
 import subprocess
 import sys
+import logging
+
+# logging setup
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(funcName)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 
 def run_kenobi():
-    print("🚀 Running Kenobi pipeline...")
+    logger.info("Running Kenobi pipeline.")
     subprocess.run([sys.executable,"-m", "kenobi.core.kenobi"])
 
 
@@ -15,8 +23,8 @@ def run_kenobi():
 schedule.every().day.at("09:00").do(run_kenobi)
 
 if __name__ == "__main__":
-    print("📅 Scheduler started. Waiting for scheduled time...")
+    logger.info("Scheduler started.")
     while True:
         schedule.run_pending()
-        print("⏱️ Waiting for the time to run:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
-        time.sleep(60)
+        logger.info("Waiting for the time to run: ", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+        time.sleep(300)
