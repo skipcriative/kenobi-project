@@ -3,6 +3,7 @@
 import requests
 import os
 import json
+import logging
 from datetime import datetime, date
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
@@ -17,34 +18,43 @@ API_KEY = os.getenv("OPENAI_API_KEY")
 FINEP_URL = "http://www.finep.gov.br/chamadas-publicas?situacao=aberta" #"http://www.finep.gov.br/chamadas-publicas/chamadaspublicas"
 OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
 
+# logging setup
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(funcName)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
+
 def fetch_finep_calls():
-    """Scrapes FINEP website for public calls."""
+    logger.info("Fetching FINEP public calls...")
     response = requests.get(FINEP_URL)
     if response.status_code != 200:
+        logger.error(f"Failed to fetch FINEP site: {response.status_code}")
         return f"Erro ao acessar o site: {response.status_code}"
 
+    logger.info("Successfully fetched FINEP site.")
     soup = BeautifulSoup(response.text, "html.parser")
 
     return soup 
 
 def parseToResponseDTO(responseText):
-    """Parses the JSON response and converts it into DTOs."""
-    # Extract JSON part from the response
 
-    # print(f"This is the original text: {responseText}")
+    logger.info("Parsing response from ChatGPT to DTO.")
+
+    # Extract JSON part from the response
     jsonStart = responseText.find("{")  # Locate where JSON starts
     jsonEnd = responseText.rfind("```")
     jsonData = responseText[jsonStart:jsonEnd]  # Extract only JSON content
     
-    # print(f"This is the json after tretment: {jsonData}")
     # Parse JSON
     try:
         parsedJson = json.loads(jsonData)
         calls = parsedJson.get("oportunidades", [])  # Get the 'chamadas' array
     except json.JSONDecodeError as e:
-        print(f"❌ Error parsing JSON: {e}")
+        logger.exception("Error parsing JSON from ChatGPT response.")
         return []
-    
+    logger.info(f"Got the opportunities.")
+
     # Validate if the edital is still open
     open_calls = []
     for call in calls:
@@ -55,8 +65,9 @@ def parseToResponseDTO(responseText):
                 if date.today() <= deadline_date:
                     open_calls.append(call)
             except ValueError:
-                print(f"⚠️ Invalid date format: {deadline_str}")
-
+                logger.warning(f"Invalid date format in edital: {deadline_str}")
+    logger.info(f"Parsed {len(open_calls)} open opportunity calls.")
+    
     # Convert JSON into DTOs
     opportunities = [
         ResponseDTO(
@@ -72,12 +83,13 @@ def parseToResponseDTO(responseText):
         )
         for call in open_calls
     ]
+    logger.info(f"DTO mounted with {len(opportunities)} opportunities.")
 
     return opportunities
 
 def ask_chatgpt():
-    """Sends scraped data to ChatGPT for analysis."""
-    # content = title + "" + link
+    
+    logger.info("Sending content to OpenAI API.")
 
     content = fetch_finep_calls()
     headers = {
@@ -96,12 +108,15 @@ def ask_chatgpt():
 
     response = requests.post(OPENAI_API_URL, headers=headers, json=data)
     if response.status_code == 200:
+        logger.info("Received valid response from OpenAI.")
         return response.json()["choices"][0]["message"]["content"]
     else:
+        logger.error(f"Error in OpenAI API: {response.status_code}, {response.text}")
         return f"Erro na API: {response.status_code}, {response.text}"
 
 
 def handle_success(response_dto, subject, recipients, html, response_gpt, response):
+        logger.info("Starting handle success.")
         email_log = create_email_log(
             EmailLogDTO(
                 subject= subject,
@@ -122,6 +137,7 @@ def handle_success(response_dto, subject, recipients, html, response_gpt, respon
                 email_log_id= email_log.id
             )
         )
+        logger.info("Finished handle success.")
 
 def handle_failure(response_dto, response):
     create_audit_event(
@@ -135,14 +151,17 @@ def handle_failure(response_dto, response):
     )
 
 def main():
-    subject = "Testing Name with emoji - on HT"
-    recipients = "eduardo.lemos16@gmail.com,eduardo.lemos@gruposkip.com,lizmatiaslisboa@gmail.com,thallescarvalhocm@gmail.com"
+    subject = "Testing Logger Local - on HT"
+    recipients = "eduardo.lemos16@gmail.com,eduardo.lemos@gruposkip.com, projetos.vas@gmail.com"#,lizmatiaslisboa@gmail.com,thallescarvalhocm@gmail.com"
+
+    logger.info("Starting Kenobi job - V1: O Despertar da Força.")
 
     # Step 1: Ask ChatGPT and build email content
     response_gpt = ask_chatgpt()
     response_dto = parseToResponseDTO(response_gpt)
     html = build_email_html(response_dto, "")
 
+    logger.info(f"Sending email to: {recipients}")
     # Step 2: Send email
     response_email = send_email(
         from_addr='"Kenobi 🦘" <naoresponder@gruposkip.com>',
@@ -154,11 +173,13 @@ def main():
 
     # Step 3: Handle email success or failure
     if response_email.ok:
-        print(f"✅ Email sent!")
+        logger.info("Email sent successfully.")
         handle_success(response_dto, subject, recipients, html, response_gpt, response_email)
     else:
-        print("❌ Failed to send email.")
+        logger.error("Failed to send email.")
         handle_failure(response_dto, response_email)
+    
+    logger.info("Finishig Kenobi job - V1: O Despertar da Força.")
 
 if __name__ == "__main__":
     main()
