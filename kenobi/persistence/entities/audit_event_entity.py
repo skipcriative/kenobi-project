@@ -10,7 +10,7 @@ BRAZIL_TZ = ZoneInfo("America/Sao_Paulo")
 class AuditEvent(Base):
     __tablename__ = "audit_events"
 
-    id = Column(String(20), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = Column(String(50), primary_key=True, default=lambda: str(uuid.uuid4()))
     timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(BRAZIL_TZ))
     event_type = Column(String(100))
     status_code = Column(String(20))
@@ -19,7 +19,7 @@ class AuditEvent(Base):
     data = Column(Text)
 
     #optional relation to EmailLog
-    email_log_id = Column(String(20), ForeignKey("email_logs.id"), nullable = True)
+    email_log_id = Column(String(50), ForeignKey("email_logs.id"), nullable = True)
 
     @classmethod
     def copy(cls, other: "AuditEvent") -> "AuditEvent":

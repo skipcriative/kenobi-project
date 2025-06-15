@@ -12,7 +12,7 @@ BRAZIL_TZ = ZoneInfo("America/Sao_Paulo")
 class EmailLog(Base):
     __tablename__ = "email_logs"
 
-    id = Column(String(20), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = Column(String(50), primary_key=True, default=lambda: str(uuid.uuid4()))
     sent_at = Column(DateTime(timezone=True), default=lambda: datetime.now(BRAZIL_TZ))
     subject = Column(String(255))
     recipients = Column(Text)

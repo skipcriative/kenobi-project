@@ -101,7 +101,7 @@ def ask_chatgpt():
         "model": "gpt-4o",
         "messages": [
             {"role": "system", "content": "Você é um assistente útil que analisa sites de chamadas públicas."},
-            {"role": "user", "content": f"Esse é o conteúdo de um site de chamadas públicas extraídas do site FINEP:\n{content}\n\nResuma as oportunidades disponíveis. Traga a resposta em formato json, o array que contém toda informação deve ter o nome de oportunidades, e os seguintes campos: titulo, objetivo, data_publicacao, prazo_envio, fonte_recurso, publico_alvo, tema_areas, link, status"}
+            {"role": "user", "content": f"Esse é o conteúdo de um site de chamadas públicas extraídas do site FINEP:\n{content}\n\nResuma as oportunidades disponíveis. Traga a resposta em formato json, o array que contém toda informação deve ter o nome de oportunidades, e os seguintes campos: titulo, objetivo(este campo deve ser um resumo de 1 linha com base nas áreas tema) , data_publicacao, prazo_envio, fonte_recurso, publico_alvo, tema_areas, link, status"}
         ],
         "temperature": 0.7
     }
@@ -152,7 +152,7 @@ def handle_failure(response_dto, response):
 
 def main():
     subject = "Testing Logger Local - on HT"
-    recipients = "eduardo.lemos16@gmail.com,eduardo.lemos@gruposkip.com, projetos.vas@gmail.com"#,lizmatiaslisboa@gmail.com,thallescarvalhocm@gmail.com"
+    recipients = "eduardo.lemos16@gmail.com,eduardo.lemos@gruposkip.com"#projetos.vas@gmail.com,lizmatiaslisboa@gmail.com,thallescarvalhocm@gmail.com"
 
     logger.info("Starting Kenobi job - V1: O Despertar da Força.")
 
