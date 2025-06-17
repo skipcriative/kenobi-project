@@ -1,11 +1,10 @@
 #kenobi/persistence/entities/email_log_entity.py
 
 from sqlalchemy import Column, String, Text, DateTime, Integer
-from sqlalchemy.types import TIMESTAMP
 from zoneinfo import ZoneInfo
 from kenobi.persistence.base import Base
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 
 BRAZIL_TZ = ZoneInfo("America/Sao_Paulo")
 

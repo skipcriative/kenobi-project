@@ -8,7 +8,7 @@ from datetime import datetime, date
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from kenobi.dtos import ResponseDTO, EmailLogDTO, AuditEventDTO
-from kenobi.services import build_email_html, send_email, create_email_log, create_audit_event, get_email_log_by_id
+from kenobi.services import build_email_html, send_email, create_email_log, create_audit_event, get_email_log_by_id, get_all_email_recipient_paginated
 
 
 # Load OpenAI API Key
@@ -120,7 +120,7 @@ def handle_success(response_dto, subject, recipients, html, response_gpt, respon
         email_log = create_email_log(
             EmailLogDTO(
                 subject= subject,
-                recipients=recipients,
+                recipients=str(recipients),
                 raw_payload=response_gpt,
                 opportunities=str(response_dto),
                 html_content=html,
@@ -151,24 +151,41 @@ def handle_failure(response_dto, response):
     )
 
 def main():
-    subject = "Testing Logger Local - on HT"
-    recipients = "eduardo.lemos16@gmail.com,eduardo.lemos@gruposkip.com"#projetos.vas@gmail.com,lizmatiaslisboa@gmail.com,thallescarvalhocm@gmail.com"
+    subject = "Testing Individual sending - on Local "
+
+    recipientsDTO = get_all_email_recipient_paginated()
+    recipients = []
+    for recipient in recipientsDTO:
+        recipients.append(recipient.email)
+    
+    logger.info(f"Those are the recipients: {recipients}")
+    # recipients = "eduardo.lemos16@gmail.com,eduardo.lemos@gruposkip.com"#projetos.vas@gmail.com,lizmatiaslisboa@gmail.com,thallescarvalhocm@gmail.com"
 
     logger.info("Starting Kenobi job - V1: O Despertar da Força.")
 
     # Step 1: Ask ChatGPT and build email content
-    response_gpt = ask_chatgpt()
-    response_dto = parseToResponseDTO(response_gpt)
+    response_gpt = ""#ask_chatgpt()
+    response_dto = [ ResponseDTO(
+            title="Programa Mulheres Inovadoras - 6ª edição",
+            resume="Apoiar inovação liderada por mulheres.",
+            publication_date="01/02/2025",
+            deadline="15/05/2025",
+            funding_source="Finep",
+            target_audience="Empresas",
+            theme="Saúde",
+            link="http://finep.gov.br/edital-002",
+            status="Closed"
+        )]#parseToResponseDTO(response_gpt)
     html = build_email_html(response_dto, "")
 
     logger.info(f"Sending email to: {recipients}")
     # Step 2: Send email
     response_email = send_email(
         from_addr='"Kenobi 🦘" <naoresponder@gruposkip.com>',
-        to_addr=recipients,
+        to_addr= recipients,
         subject=subject,
         html_body=html,
-        api_url="http://18.222.179.149:8080//api/email"
+        api_url="http://localhost:8080/api/email"#"http://18.222.179.149:8080//api/email"
     )
 
     # Step 3: Handle email success or failure
@@ -176,7 +193,7 @@ def main():
         logger.info("Email sent successfully.")
         handle_success(response_dto, subject, recipients, html, response_gpt, response_email)
     else:
-        logger.error("Failed to send email.")
+        logger.error(f"Failed to send email. With code: {response_email.status_code} and message: {response_email.text}")
         handle_failure(response_dto, response_email)
     
     logger.info("Finishig Kenobi job - V1: O Despertar da Força.")
