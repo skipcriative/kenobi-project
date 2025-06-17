@@ -71,15 +71,15 @@ def parseToResponseDTO(responseText):
     # Convert JSON into DTOs
     opportunities = [
         ResponseDTO(
-            title=call.get("titulo", "N/A"),
-            resume = call.get("objetivo","N/A"),
-            publication_date=call.get("data_publicacao", "N/A"),
-            deadline=call.get("prazo_envio", "N/A"),
-            funding_source=call.get("fonte_recurso", "N/A"),
-            target_audience=call.get("publico_alvo", "N/A"),
-            theme=call.get("tema_areas", "N/A"),
-            link=call.get("link", "N/A"),
-            status=call.get("status","N/A")
+            title=call.get("titulo", "Não especificado."),
+            resume = call.get("objetivo","Não especificado."),
+            publication_date=call.get("data_publicacao", "Não especificado."),
+            deadline=call.get("prazo_envio", "Não especificado."),
+            funding_source=call.get("fonte_recurso", "Não especificado."),
+            target_audience=call.get("publico_alvo", "Não especificado."),
+            theme=call.get("tema_areas", "Não especificado."),
+            link=call.get("link", "Não especificado."),
+            status=call.get("status","Não especificado.")
         )
         for call in open_calls
     ]
@@ -151,7 +151,7 @@ def handle_failure(response_dto, response):
     )
 
 def main():
-    subject = "Testing Individual sending - on Local "
+    subject = "Adjusting Return from GPT API - on Local "
 
     recipientsDTO = get_all_email_recipient_paginated()
     recipients = []
@@ -164,18 +164,8 @@ def main():
     logger.info("Starting Kenobi job - V1: O Despertar da Força.")
 
     # Step 1: Ask ChatGPT and build email content
-    response_gpt = ""#ask_chatgpt()
-    response_dto = [ ResponseDTO(
-            title="Programa Mulheres Inovadoras - 6ª edição",
-            resume="Apoiar inovação liderada por mulheres.",
-            publication_date="01/02/2025",
-            deadline="15/05/2025",
-            funding_source="Finep",
-            target_audience="Empresas",
-            theme="Saúde",
-            link="http://finep.gov.br/edital-002",
-            status="Closed"
-        )]#parseToResponseDTO(response_gpt)
+    response_gpt = ask_chatgpt()
+    response_dto = parseToResponseDTO(response_gpt)
     html = build_email_html(response_dto, "")
 
     logger.info(f"Sending email to: {recipients}")
