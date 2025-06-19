@@ -12,10 +12,10 @@ from kenobi.services import build_email_html, send_email, create_email_log, crea
 
 
 # Load OpenAI API Key
-load_dotenv()
+load_dotenv(override=True)
 API_KEY = os.getenv("OPENAI_API_KEY")
 
-FINEP_URL = "http://www.finep.gov.br/chamadas-publicas?situacao=aberta" #"http://www.finep.gov.br/chamadas-publicas/chamadaspublicas"
+FINEP_URL = "http://www.finep.gov.br/chamadas-publicas?situacao=aberta"
 OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
 
 # logging setup
@@ -151,7 +151,7 @@ def handle_failure(response_dto, response):
     )
 
 def main():
-    subject = "Adjusting Return from GPT API - on Local "
+    subject = "Beta Teste: Que a Força dos Editais Esteja com você!"
 
     recipientsDTO = get_all_email_recipient_paginated()
     recipients = []
@@ -159,7 +159,6 @@ def main():
         recipients.append(recipient.email)
     
     logger.info(f"Those are the recipients: {recipients}")
-    # recipients = "eduardo.lemos16@gmail.com,eduardo.lemos@gruposkip.com"#projetos.vas@gmail.com,lizmatiaslisboa@gmail.com,thallescarvalhocm@gmail.com"
 
     logger.info("Starting Kenobi job - V1: O Despertar da Força.")
 
@@ -175,7 +174,7 @@ def main():
         to_addr= recipients,
         subject=subject,
         html_body=html,
-        api_url="http://localhost:8080/api/email"#"http://18.222.179.149:8080//api/email"
+        api_url="http://18.222.179.149:8080/api/email"
     )
 
     # Step 3: Handle email success or failure

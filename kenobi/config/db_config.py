@@ -9,7 +9,7 @@ import logging
 
 
 #load enviroment variables
-load_dotenv()
+load_dotenv(override=True)
 
 # logging setup
 logging.basicConfig(

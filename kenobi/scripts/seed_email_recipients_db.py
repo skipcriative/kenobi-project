@@ -36,7 +36,7 @@ def main():
 
         EmailRecipientDTO(
             email_group="beta",
-            email="lizandra.lisboa@gruposkip.com", 
+            email="lizmatiaslisboa@gmail.com ", 
             active=True
         ),
 
