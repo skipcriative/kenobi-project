@@ -20,11 +20,12 @@ def run_kenobi():
 
 
 #Schedule to run once every day at 9am
-schedule.every().day.at("09:00").do(run_kenobi)
+schedule.every().friday.at("10:33").do(run_kenobi)
 
 if __name__ == "__main__":
     logger.info("Scheduler started.")
     while True:
         schedule.run_pending()
-        logger.info("Waiting for the time to run: ", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+        next_run = schedule.next_run()
+        logger.info(f"Waiting for the time to run:{str(next_run)}")
         time.sleep(300)
