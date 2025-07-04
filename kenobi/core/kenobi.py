@@ -69,20 +69,27 @@ def parseToResponseDTO(responseText):
     logger.info(f"Parsed {len(open_calls)} open opportunity calls.")
     
     # Convert JSON into DTOs
-    opportunities = [
+    opportunities = []
+    for call in open_calls:
+        funding_source = call.get("fonte_recurso", "Não especificado.")
+    
+        #removes brackets and quotes if funding_source is a list type
+        if isinstance(funding_source, list):
+            funding_source = ", ".join(funding_source)
+
+    opportunities.append(
         ResponseDTO(
             title=call.get("titulo", "Não especificado."),
-            resume = call.get("objetivo","Não especificado."),
+            resume=call.get("objetivo", "Não especificado."),
             publication_date=call.get("data_publicacao", "Não especificado."),
             deadline=call.get("prazo_envio", "Não especificado."),
-            funding_source=call.get("fonte_recurso", "Não especificado."),
+            funding_source=funding_source,  # normalized
             target_audience=call.get("publico_alvo", "Não especificado."),
             theme=call.get("tema_areas", "Não especificado."),
             link=call.get("link", "Não especificado."),
-            status=call.get("status","Não especificado.")
+            status=call.get("status", "Não especificado.")
         )
-        for call in open_calls
-    ]
+    )
     logger.info(f"DTO mounted with {len(opportunities)} opportunities.")
 
     return opportunities
@@ -101,7 +108,7 @@ def ask_chatgpt():
         "model": "gpt-4o",
         "messages": [
             {"role": "system", "content": "Você é um assistente útil que analisa sites de chamadas públicas."},
-            {"role": "user", "content": f"Esse é o conteúdo de um site de chamadas públicas extraídas do site FINEP:\n{content}\n\nResuma as oportunidades disponíveis. Traga a resposta em formato json, o array que contém toda informação deve ter o nome de oportunidades, e os seguintes campos: titulo, objetivo(este campo deve ser um resumo de 1 linha com base nas áreas tema) , data_publicacao, prazo_envio, fonte_recurso, publico_alvo, tema_areas, link, status"}
+            {"role": "user", "content": f"Esse é o conteúdo de um site de chamadas públicas extraídas do site FINEP:\n{content}\n\nResuma as oportunidades disponíveis. Traga a resposta em formato json, o array que contém toda informação deve ter o nome de oportunidades, e os seguintes campos: titulo, objetivo(este campo deve ser um resumo de 1 linha com base nas áreas tema) , data_publicacao, prazo_envio, fonte_recurso, publico_alvo(este campo deve ser um resumo de 1 linha com base nas áreas, e resumo disponíveis na página), tema_areas, link, status"}
         ],
         "temperature": 0.7
     }
@@ -151,7 +158,7 @@ def handle_failure(response_dto, response):
     )
 
 def main():
-    subject = "Beta Teste: Que a Força dos Editais Esteja com você!"
+    subject = "Beta em HT: Que a força da captação de recursos esteja com você!"
 
     recipientsDTO = get_all_email_recipient_paginated()
     recipients = []
