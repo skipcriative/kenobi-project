@@ -77,19 +77,19 @@ def parseToResponseDTO(responseText):
         if isinstance(funding_source, list):
             funding_source = ", ".join(funding_source)
 
-    opportunities.append(
-        ResponseDTO(
-            title=call.get("titulo", "Não especificado."),
-            resume=call.get("objetivo", "Não especificado."),
-            publication_date=call.get("data_publicacao", "Não especificado."),
-            deadline=call.get("prazo_envio", "Não especificado."),
-            funding_source=funding_source,  # normalized
-            target_audience=call.get("publico_alvo", "Não especificado."),
-            theme=call.get("tema_areas", "Não especificado."),
-            link=call.get("link", "Não especificado."),
-            status=call.get("status", "Não especificado.")
+        opportunities.append(
+            ResponseDTO(
+                title=call.get("titulo", "Não especificado."),
+                resume=call.get("objetivo", "Não especificado."),
+                publication_date=call.get("data_publicacao", "Não especificado."),
+                deadline=call.get("prazo_envio", "Não especificado."),
+                funding_source=funding_source,  # normalized
+                target_audience=call.get("publico_alvo", "Não especificado."),
+                theme=call.get("tema_areas", "Não especificado."),
+                link=call.get("link", "Não especificado."),
+                status=call.get("status", "Não especificado.")
+            )
         )
-    )
     logger.info(f"DTO mounted with {len(opportunities)} opportunities.")
 
     return opportunities
