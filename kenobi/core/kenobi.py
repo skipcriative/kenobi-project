@@ -6,6 +6,7 @@ import json
 import logging
 from datetime import datetime, date
 from bs4 import BeautifulSoup
+from playwright.sync_api import sync_playwright
 from dotenv import load_dotenv
 from kenobi.dtos import ResponseDTO, EmailLogDTO, AuditEventDTO
 from kenobi.services import build_email_html, send_email, create_email_log, create_audit_event, get_email_log_by_id, get_all_email_recipient_paginated
@@ -15,7 +16,7 @@ from kenobi.services import build_email_html, send_email, create_email_log, crea
 load_dotenv(override=True)
 API_KEY = os.getenv("OPENAI_API_KEY")
 
-FINEP_URL = "http://www.finep.gov.br/chamadas-publicas?situacao=aberta"
+FINEP_URL = "https://fapemig.br/oportunidades/chamadas-e-editais" #"http://www.finep.gov.br/chamadas-publicas?situacao=aberta"
 OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
 
 # logging setup
@@ -25,17 +26,26 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def fetch_finep_calls():
-    logger.info("Fetching FINEP public calls...")
-    response = requests.get(FINEP_URL)
-    if response.status_code != 200:
-        logger.error(f"Failed to fetch FINEP site: {response.status_code}")
-        return f"Erro ao acessar o site: {response.status_code}"
+def fetch_calls(url):
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
 
-    logger.info("Successfully fetched FINEP site.")
-    soup = BeautifulSoup(response.text, "html.parser")
+        # Load the page
+        page.goto(url, wait_until="networkidle")
 
-    return soup 
+        # Wait for the grid or shadow DOM to appear
+        page.wait_for_selector(".calls__grid", timeout=15000)
+
+        # Evaluate JS inside the page
+        calls_grid_html = page.eval_on_selector(
+            ".calls__grid",
+            "element => element.innerHTML"
+        )
+
+        browser.close()
+        return calls_grid_html
+
 
 def parseToResponseDTO(responseText):
 
@@ -61,8 +71,8 @@ def parseToResponseDTO(responseText):
         deadline_str = call.get("prazo_envio", None)
         if deadline_str:
             try:
-                deadline_date = datetime.strptime(deadline_str, "%d/%m/%Y").date()
-                if date.today() <= deadline_date:
+                # deadline_date = datetime.strptime(deadline_str, "%d/%m/%Y").date()
+                # if date.today() <= deadline_date:
                     open_calls.append(call)
             except ValueError:
                 logger.warning(f"Invalid date format in edital: {deadline_str}")
@@ -98,7 +108,7 @@ def ask_chatgpt():
     
     logger.info("Sending content to OpenAI API.")
 
-    content = fetch_finep_calls()
+    content = fetch_calls("https://fapemig.br/oportunidades/chamadas-e-editais")
     headers = {
         "Authorization": f"Bearer {API_KEY}",
         "Content-Type": "application/json"
@@ -115,7 +125,7 @@ def ask_chatgpt():
 
     response = requests.post(OPENAI_API_URL, headers=headers, json=data)
     if response.status_code == 200:
-        logger.info("Received valid response from OpenAI.")
+        logger.info(f"Received valid response from OpenAI.{response.json()["choices"][0]["message"]["content"]}")
         return response.json()["choices"][0]["message"]["content"]
     else:
         logger.error(f"Error in OpenAI API: {response.status_code}, {response.text}")
@@ -158,7 +168,7 @@ def handle_failure(response_dto, response):
     )
 
 def main():
-    subject = "Beta em HT: Que a força da captação de recursos esteja com você!"
+    subject = "Beta HT: Que a força da captação de recursos esteja com você!"
 
     recipientsDTO = get_all_email_recipient_paginated()
     recipients = []
