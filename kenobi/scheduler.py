@@ -20,7 +20,7 @@ def run_kenobi():
 
 
 #Schedule to run once every day at 9am
-schedule.every().day.at("09:00").do(run_kenobi)
+schedule.every().monday.at("09:00").do(run_kenobi)
 
 if __name__ == "__main__":
     logger.info("Scheduler started.")

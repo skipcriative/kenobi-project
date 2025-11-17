@@ -10,6 +10,7 @@ class ResponseDTO:
     publication_date: str
     deadline: str
     funding_source: str
+    funding: str
     target_audience: str
     theme: str
     link: str

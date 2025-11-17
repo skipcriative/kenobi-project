@@ -8,6 +8,7 @@ from datetime import datetime, date
 from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright
 from dotenv import load_dotenv
+import re
 from kenobi.dtos import ResponseDTO, EmailLogDTO, AuditEventDTO
 from kenobi.services import build_email_html, send_email, create_email_log, create_audit_event, get_email_log_by_id, get_all_email_recipient_paginated
 
@@ -25,6 +26,57 @@ logging.basicConfig(
     format="%(asctime)s - %(funcName)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
+
+# Mapa manual para meses abreviados da FAPEMIG
+MESES_PT = {
+    "jan": 1,
+    "fev": 2,
+    "mar": 3,
+    "abr": 4,
+    "mai": 5,
+    "jun": 6,
+    "jul": 7,
+    "ago": 8,
+    "set": 9,
+    "out": 10,
+    "nov": 11,
+    "dez": 12,
+}
+
+def parse_deadline(deadline_str: str):
+    if not deadline_str:
+        return None
+
+    deadline_str = deadline_str.strip().lower()
+
+    # 1️⃣ Fluxo contínuo → sempre aberto
+    if "fluxo contínuo" in deadline_str or "fluxo continuo" in deadline_str:
+        return "fluxo_continuo"
+
+    # 2️⃣ Formato padrão (25/11/2025)
+    try:
+        return datetime.strptime(deadline_str, "%d/%m/%Y").date()
+    except:
+        pass
+
+    # 3️⃣ Formato textual: "25 de nov. de 2025"
+    # remover pontos
+    clean = deadline_str.replace(".", "")
+
+    match = re.match(r"(\d+)\s+de\s+([a-zA-Z]+)\s+de\s+(\d{4})", clean)
+    if match:
+        dia = int(match.group(1))
+        mes_txt = match.group(2)[:3]  # pega "nov" de "nov" ou "novembro"
+        ano = int(match.group(3))
+
+        mes = MESES_PT.get(mes_txt)
+        if mes:
+            return date(ano, mes, dia)
+
+    # se nada funcionar → inválida
+    return None
+
 
 def fetch_calls(url):
     with sync_playwright() as p:
@@ -69,14 +121,22 @@ def parseToResponseDTO(responseText):
     open_calls = []
     for call in calls:
         deadline_str = call.get("prazo_envio", None)
-        if deadline_str:
-            try:
-                # deadline_date = datetime.strptime(deadline_str, "%d/%m/%Y").date()
-                # if date.today() <= deadline_date:
-                    open_calls.append(call)
-            except ValueError:
-                logger.warning(f"Invalid date format in edital: {deadline_str}")
-    logger.info(f"Parsed {len(open_calls)} open opportunity calls.")
+        parsed = parse_deadline(deadline_str)
+
+        if parsed is None:
+            logger.warning(f"Invalid date format in edital: {deadline_str}")
+            continue
+
+        # Fluxo contínuo → sempre aberto
+        if parsed == "fluxo_continuo":
+            open_calls.append(call)
+            continue
+
+        # Data válida → comparar com agora
+        if date.today() <= parsed:
+            open_calls.append(call)
+
+        logger.info(f"Parsed {len(open_calls)} open opportunity calls.")
     
     # Convert JSON into DTOs
     opportunities = []
@@ -94,9 +154,10 @@ def parseToResponseDTO(responseText):
                 publication_date=call.get("data_publicacao", "Não especificado."),
                 deadline=call.get("prazo_envio", "Não especificado."),
                 funding_source=funding_source,  # normalized
+                funding=call.get("recurso","Não especificado"),
                 target_audience=call.get("publico_alvo", "Não especificado."),
                 theme=call.get("tema_areas", "Não especificado."),
-                link=call.get("link", "Não especificado."),
+                link="https://fapemig.br"+call.get("link", "Não especificado."),
                 status=call.get("status", "Não especificado.")
             )
         )
@@ -118,7 +179,7 @@ def ask_chatgpt():
         "model": "gpt-4o",
         "messages": [
             {"role": "system", "content": "Você é um assistente útil que analisa sites de chamadas públicas."},
-            {"role": "user", "content": f"Esse é o conteúdo de um site de chamadas públicas extraídas do site FINEP:\n{content}\n\nResuma as oportunidades disponíveis. Traga a resposta em formato json, o array que contém toda informação deve ter o nome de oportunidades, e os seguintes campos: titulo, objetivo(este campo deve ser um resumo de 1 linha com base nas áreas tema) , data_publicacao, prazo_envio, fonte_recurso, publico_alvo(este campo deve ser um resumo de 1 linha com base nas áreas, e resumo disponíveis na página), tema_areas, link, status"}
+            {"role": "user", "content": f"Esse é o conteúdo de um site de chamadas públicas extraídas do site FINEP:\n{content}\n\nResuma as oportunidades disponíveis. Traga a resposta em formato json, o array que contém toda informação deve ter o nome de oportunidades, e os seguintes campos: titulo, objetivo(este campo deve ser um resumo de 1 linha com base nas áreas tema) , data_publicacao, prazo_envio, fonte_recurso, recurso(este campo dever trazer o valor em reais R$ total disponível para a oportunidade), publico_alvo(este campo deve ser um resumo de 1 linha com base nas áreas, e resumo disponíveis na página), tema_areas, link, status"}
         ],
         "temperature": 0.7
     }
